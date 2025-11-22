@@ -5,6 +5,8 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { client } from "@ntq/sdk";
 import { MushafOptionsProvider } from "@/contexts/mushafOptionsContext";
 import { SelectedProvider } from "@/contexts/selectedsContext";
+import { PlayOptionsProvider } from "@/contexts/playOptionsContext";
+import { Audio } from "@/components/Audio";
 
 const geistSans = Geist({
     variable: "--font-geist-sans",
@@ -41,9 +43,14 @@ export default function RootLayout({
                     enableSystem
                     disableTransitionOnChange
                 >
-                    <MushafOptionsProvider>
-                        <SelectedProvider>{children}</SelectedProvider>
-                    </MushafOptionsProvider>
+                    <PlayOptionsProvider>
+                        <MushafOptionsProvider>
+                            <SelectedProvider>
+                                {children}
+                                <Audio />
+                            </SelectedProvider>
+                        </MushafOptionsProvider>
+                    </PlayOptionsProvider>
                 </ThemeProvider>
             </body>
         </html>

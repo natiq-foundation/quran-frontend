@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/dialog";
 import { Item, ItemContent, ItemTitle } from "./ui/item";
 import { AyahBreakersResponse, Surah } from "@ntq/sdk";
-import { ListIndentIncrease } from "lucide-react";
 import { FindPopup } from "./popups/FindPopup";
 
 interface FindBarProps {

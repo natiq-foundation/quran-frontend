@@ -7,7 +7,7 @@ import {
     SheetTrigger,
 } from "../ui/sheet";
 
-import { Moon, Palette, Settings, ZoomIn } from "lucide-react";
+import { Moon, Palette, ZoomIn } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import {
     Select,

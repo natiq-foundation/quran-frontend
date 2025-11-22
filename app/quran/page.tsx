@@ -10,7 +10,9 @@ export default async function QuranPage() {
                 <Header />
             </Suspense>
             <Main />
-            <Player />
+            <Suspense fallback={<h1>Loading Player</h1>}>
+                <Player />
+            </Suspense>
         </>
     );
 }

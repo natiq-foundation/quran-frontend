@@ -23,7 +23,13 @@ export function SelectTranslation({
 }) {
     const [selected, setSelected] = useSelected();
     const [open, setOpen] = useState(false);
-    const [value, setValue] = useState("");
+    const [value, setValue] = useState(
+        `${
+            translations.find(
+                (translation) => translation.uuid === selected.translationUUID
+            )?.language
+        }:${selected.translationUUID}:${selected.translationRtl}`
+    );
 
     const handleSelectChange = (value: string) => {
         const [language, translation_uuid, language_is_rtl] = value.split(":");
@@ -59,7 +65,7 @@ export function SelectTranslation({
                     <CommandInput placeholder="Search translation..." />
                     <CommandList>
                         <CommandEmpty>No translations found!</CommandEmpty>
-                        <CommandGroup>
+                        <CommandGroup heading="Translations">
                             {translations.map((translation, index) => (
                                 <CommandItem
                                     key={index}

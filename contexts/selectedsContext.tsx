@@ -9,6 +9,7 @@ interface Selected {
     translationRtl: boolean;
     translationByWordUUID: string;
     recitationUUID: string;
+    wordUUID: string;
 }
 
 const defaultSelected: Selected = {
@@ -18,6 +19,7 @@ const defaultSelected: Selected = {
     translationRtl: false,
     translationByWordUUID: "UUID",
     recitationUUID: "UUID",
+    wordUUID: "UUID",
 };
 
 const [SelectedProvider, useSelected] = createLocalStorageContext<Selected>(

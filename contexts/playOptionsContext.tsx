@@ -3,7 +3,7 @@
 import { createLocalStorageContext } from "@yakad/lib";
 
 export type PlayBackRate = 0.5 | 1 | 1.25 | 1.5 | 1.75 | 2;
-export type RepeatRange = "surah" | "juz" | "hizb" | "ruku" | "page";
+export type RepeatRange = "ayah" | "surah" | "juz" | "hizb" | "ruku" | "page";
 
 interface Options {
     playing: boolean;
@@ -14,6 +14,8 @@ interface Options {
     repeatMode: "off" | "range" | "ayah";
     repeatRange: RepeatRange;
     autoScroll: boolean;
+    loading: boolean;
+    progress: number;
 }
 
 const defaultOptions: Options = {
@@ -25,6 +27,8 @@ const defaultOptions: Options = {
     repeatMode: "off",
     repeatRange: "surah",
     autoScroll: true,
+    loading: false,
+    progress: 0,
 };
 
 const [PlayOptionsProvider, usePlayOptions] =

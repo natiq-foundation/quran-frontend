@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Settings } from "lucide-react";
 import {
     Sheet,
     SheetContent,
@@ -10,27 +9,26 @@ import {
     SheetTitle,
     SheetTrigger,
 } from "@/components/ui/sheet";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Symbol } from "@yakad/symbols";
+import { SelectRecitation } from "@/components/inputs/SelectRecitation";
+import { useSelected } from "@/contexts/selectedsContext";
+import { RecitationList } from "@ntq/sdk";
 
-export function PlayerSettingsButton() {
-    const [selectedReciter, setSelectedReciter] = useState("");
+type PlayerSettingsButtonProps = {
+    recitations: RecitationList[];
+    loading?: boolean;
+};
+
+export function PlayerSettingsButton({
+    recitations,
+}: PlayerSettingsButtonProps) {
     const [autoScroll, setAutoScroll] = useState(false);
-    const [recitationsLoading, setRecitationsLoading] = useState(false);
+    const [selected, setSelected] = useSelected();
 
-    const recitations = [
-        { reciter_account_uuid: "Reciter 1 - Murattal" },
-        { reciter_account_uuid: "Reciter 2 - Mujawwad" },
-        { reciter_account_uuid: "Reciter 3 - Murattal" },
-    ];
+    const onRecitationChanged = (val: string) =>
+        setSelected((prev) => ({ ...prev, recitationUUID: val }));
 
     return (
         <Sheet>
@@ -44,39 +42,11 @@ export function PlayerSettingsButton() {
                     <SheetTitle>Settings</SheetTitle>
                 </SheetHeader>
                 <div className="p-4 space-y-6">
-                    <div className="space-y-3">
-                        <h3 className="text-lg font-semibold">Recite</h3>
-                        {recitations.length <= 0 && !recitationsLoading ? (
-                            <p className="text-sm text-muted-foreground">
-                                No recitation Found!
-                            </p>
-                        ) : !recitationsLoading ? (
-                            <Select
-                                value={selectedReciter}
-                                onValueChange={setSelectedReciter}
-                            >
-                                <SelectTrigger className="w-full">
-                                    <SelectValue placeholder="Reciter - Reciting type" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {recitations.map((recitation, index) => (
-                                        <SelectItem
-                                            key={index}
-                                            value={
-                                                recitation.reciter_account_uuid
-                                            }
-                                        >
-                                            {recitation.reciter_account_uuid}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        ) : (
-                            <div className="flex items-center justify-center py-4">
-                                <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                            </div>
-                        )}
-                    </div>
+                    <SelectRecitation
+                        recitations={recitations}
+                        selectedReciter={selected.recitationUUID}
+                        onValueChange={onRecitationChanged}
+                    />
 
                     <div className="space-y-3">
                         <h3 className="text-lg font-semibold">Auto scroll</h3>

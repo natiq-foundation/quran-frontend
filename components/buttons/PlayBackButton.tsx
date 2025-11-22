@@ -1,12 +1,16 @@
-import { useState } from "react";
+"use client";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Button } from "../ui/button";
 import { IconCode, Symbol } from "@yakad/symbols";
+import {
+    usePlayOptions,
+    type PlayBackRate,
+} from "@/contexts/playOptionsContext";
 
 type SpeedOption = {
-    value: number;
+    value: PlayBackRate;
     label: string;
-    icon: string;
+    icon: IconCode;
 };
 
 const speedOptions: SpeedOption[] = [
@@ -19,15 +23,26 @@ const speedOptions: SpeedOption[] = [
 ];
 
 export function PlayBackButton() {
-    const [playbackSpeed, setPlaybackSpeed] = useState(1);
+    const [options, setOptions] = usePlayOptions();
+    const playbackSpeed = options.playBackRate ?? 1;
+
     const currentIcon: IconCode =
         (speedOptions.find((option) => option.value === playbackSpeed)
             ?.icon as IconCode) ?? "speed";
+
+    const handleSpeedChange = (value: PlayBackRate) => {
+        setOptions((prev) => ({
+            ...prev,
+            playBackActive: value === 1 ? false : true,
+            playBackRate: value,
+        }));
+    };
+
     return (
         <Popover>
             <PopoverTrigger asChild>
                 <Button
-                    variant={playbackSpeed === 1 ? "ghost" : "default"}
+                    variant={playbackSpeed === 1 ? "ghost" : "secondary"}
                     size="icon-lg"
                 >
                     <Symbol icon={currentIcon} />
@@ -37,19 +52,20 @@ export function PlayBackButton() {
                 <div className="space-y-2">
                     <h4 className="font-medium text-sm">Playback Speed</h4>
                     <div className="grid gap-1">
-                        {speedOptions.map(({ value, label }) => (
+                        {speedOptions.map(({ value, label, icon }) => (
                             <Button
                                 key={value}
                                 variant={
                                     playbackSpeed === value
-                                        ? "default"
+                                        ? "secondary"
                                         : "ghost"
                                 }
                                 size="sm"
                                 className="justify-start"
-                                onClick={() => setPlaybackSpeed(value)}
+                                onClick={() => handleSpeedChange(value)}
                             >
-                                {value}x<p>{label}</p>
+                                <Symbol icon={icon} />
+                                {label}
                             </Button>
                         ))}
                     </div>

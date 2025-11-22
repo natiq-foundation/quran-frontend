@@ -1,37 +1,56 @@
-import { useState } from "react";
+"use client";
+
 import {
     Popover,
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover";
 import { Button } from "../ui/button";
-import { Repeat2 } from "lucide-react";
 import { Symbol } from "@yakad/symbols";
+import { RepeatRange, usePlayOptions } from "@/contexts/playOptionsContext";
 
-type SkipType = "intro" | "verse" | "chorus" | "bridge" | "outro";
 export function RepeatButton() {
-    const [skipType, setSkipType] = useState<SkipType>("verse");
-    const [skipModeOn, setSkipModeOn] = useState<boolean>(false);
+    const [options, setPlayOptions] = usePlayOptions();
+    const skipModeOn = options.repeatMode !== "off";
+    const skipType = options.repeatRange;
 
-    const skipTypes: SkipType[] = [
-        "intro",
-        "verse",
-        "chorus",
-        "bridge",
-        "outro",
+    const skipTypes: RepeatRange[] = [
+        // "ayah", This has a deferent icon so we hard code it
+        "surah",
+        "juz",
+        "hizb",
+        "ruku",
+        "page",
     ];
+
+    const handleRepeatChange = (
+        type: RepeatRange,
+        mode: "ayah" | "off" | "range"
+    ) => {
+        setPlayOptions((prev) => ({
+            ...prev,
+            repeatRange: type,
+            repeatMode: mode,
+        }));
+    };
 
     return (
         <Popover>
             <PopoverTrigger asChild>
                 <Button
-                    variant={skipModeOn ? "default" : "ghost"}
+                    variant={skipModeOn ? "secondary" : "ghost"}
                     size="icon-lg"
                     onContextMenu={(e) => {
                         e.preventDefault();
                     }}
                 >
-                    <Symbol icon="repeat" />
+                    <Symbol
+                        icon={
+                            options.repeatMode === "ayah"
+                                ? "repeat_one"
+                                : "repeat"
+                        }
+                    />
                 </Button>
             </PopoverTrigger>
             <PopoverContent className="w-44" align="center" side="top">
@@ -39,28 +58,41 @@ export function RepeatButton() {
                     <h4 className="font-medium text-sm">Repeat</h4>
                     <div className="grid gap-1">
                         <Button
-                            variant={!skipModeOn ? "default" : "ghost"}
+                            variant={!skipModeOn ? "secondary" : "ghost"}
                             size="sm"
                             className="justify-start"
-                            onClick={() => setSkipModeOn(false)}
+                            onClick={() => handleRepeatChange(skipType, "off")}
                         >
                             Continuous
+                        </Button>
+                        <Button
+                            variant={
+                                options.repeatMode === "ayah"
+                                    ? "secondary"
+                                    : "ghost"
+                            }
+                            size="sm"
+                            className="justify-start"
+                            onClick={() => handleRepeatChange("ayah", "ayah")}
+                        >
+                            <Symbol icon="repeat_one" /> Ayah
                         </Button>
                         {skipTypes.map((type) => (
                             <Button
                                 key={type}
                                 variant={
-                                    skipModeOn && skipType === type
-                                        ? "default"
+                                    options.repeatMode === "range" &&
+                                    skipType === type
+                                        ? "secondary"
                                         : "ghost"
                                 }
                                 size="sm"
                                 className="justify-start"
-                                onClick={() => {
-                                    setSkipModeOn(true);
-                                    setSkipType(type);
-                                }}
+                                onClick={() =>
+                                    handleRepeatChange(type, "range")
+                                }
                             >
+                                <Symbol icon="repeat" />{" "}
                                 {type.charAt(0).toUpperCase() + type.slice(1)}
                             </Button>
                         ))}
