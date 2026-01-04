@@ -56,7 +56,7 @@ export function Ayah({
             id={id}
             onClick={onClick}
             className={cn(
-                "flex flex-col gap-3 p-5 hover:bg-accent/80 rounded-md transition-all cursor-pointer",
+                "flex flex-col gap-3 p-5 hover:bg-accent/80 rounded-2xl transition-all cursor-pointer",
                 selected && "bg-accent"
             )}
         >
@@ -74,7 +74,7 @@ export function Ayah({
                     translationAlignClass
                 )}
             >
-                {translationText ?? (
+                {(mushafOptions?.translationVisibility && translationText) ?? (
                     <Skeleton className="h-[30px] w-[300px] rounded-md" />
                 )}
             </div>

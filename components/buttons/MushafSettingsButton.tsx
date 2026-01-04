@@ -29,6 +29,7 @@ import {
     AccordionItem,
     AccordionTrigger,
 } from "../ui/accordion";
+import { Checkbox } from "../ui/checkbox";
 
 export function MushafSettingsButton({
     translations,
@@ -41,6 +42,7 @@ export function MushafSettingsButton({
     const handleSelectChange = (name: string, value: string) => {
         setMushafOptions((prev) => ({ ...prev, [name]: value }));
     };
+
     return (
         <Sheet>
             <SheetTrigger asChild>
@@ -63,19 +65,41 @@ export function MushafSettingsButton({
                         collapsible
                         defaultValue="item-1"
                     >
+
                         <AccordionItem value="item-1">
                             <AccordionTrigger className="hover:no-underline cursor-pointer hover:bg-accent/80 p-3">
                                 <Label className="text-base font-semibold">
-                                    <Symbol icon="match_case" />
-                                    Arabic Text
+                                    <Symbol icon="translate" />
+                                    Translation
                                 </Label>
                             </AccordionTrigger>
-                            <AccordionContent className="p-4">
+
+                            <AccordionContent className="space-y-8 mt-5 p-3">
+                                <div className="flex items-center gap-3">
+                                    <Checkbox checked={mushafOptions.translationVisibility} onCheckedChange={(s) => setMushafOptions(prev => ({ ...prev, translationVisibility: Boolean(s) }))} id="showTranslation" />
+                                    <Label htmlFor="showTranslation">Translation Visibility</Label>
+                                </div>
+
+                                <SelectTranslation translations={translations} />
+
+                            </AccordionContent>
+                        </AccordionItem>
+
+                        <Separator />
+
+                        <AccordionItem value="item-2">
+                            <AccordionTrigger className="hover:no-underline cursor-pointer hover:bg-accent/80 p-3">
+                                <Label className="text-base font-semibold">
+                                    <Symbol icon="match_case" />
+                                    Font
+                                </Label>
+                            </AccordionTrigger>
+                            <AccordionContent className="p-3">
                                 <div className="flex gap-2 justify-around flex-col">
                                     <div className="space-y-2">
                                         <Label htmlFor="arabicFont" className="text-sm">
                                             <Symbol icon="brand_family" />
-                                            Font
+                                            Arabic Font
                                         </Label>
                                         <Select
                                             value={"tahoma"}
@@ -100,7 +124,7 @@ export function MushafSettingsButton({
                                             className="text-sm"
                                         >
                                             <Symbol icon="format_size" />
-                                            Font size
+                                            Arabic Font size
                                         </Label>
                                         <Select
                                             value={mushafOptions.arabicFontSize}
@@ -124,6 +148,39 @@ export function MushafSettingsButton({
                                                 <SelectItem value="large">
                                                     Large
                                                 </SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label
+                                            htmlFor="translationFontSize"
+                                            className="text-sm"
+                                        >
+                                            <Symbol icon="format_size" />
+                                            Translation Font size
+                                        </Label>
+                                        <Select
+                                            value={mushafOptions.translationFontSize}
+                                            onValueChange={(value) =>
+                                                handleSelectChange(
+                                                    "translationFontSize",
+                                                    value
+                                                )
+                                            }
+                                        >
+                                            <SelectTrigger
+                                                id="translationFontSize"
+                                                className="w-full"
+                                            >
+                                                <SelectValue placeholder="Translation Font size" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="small">Small</SelectItem>
+                                                <SelectItem value="medium">
+                                                    Medium
+                                                </SelectItem>
+                                                <SelectItem value="large">Large</SelectItem>
                                             </SelectContent>
                                         </Select>
                                     </div>
@@ -159,52 +216,6 @@ export function MushafSettingsButton({
                         </AccordionItem>
 
                         <Separator />
-                        <AccordionItem value="item-2">
-                            <AccordionTrigger className="hover:no-underline cursor-pointer hover:bg-accent/80 p-3">
-                                <Label className="text-base font-semibold">
-                                    <Symbol icon="translate" />
-                                    Translate
-                                </Label>
-                            </AccordionTrigger>
-
-                            <AccordionContent className="space-y-8 mt-5">
-                                <SelectTranslation translations={translations} />
-
-                                <div className="space-y-2">
-                                    <Label
-                                        htmlFor="translationFontSize"
-                                        className="text-sm"
-                                    >
-                                        Translation Font size
-                                    </Label>
-                                    <Select
-                                        value={mushafOptions.translationFontSize}
-                                        onValueChange={(value) =>
-                                            handleSelectChange(
-                                                "translationFontSize",
-                                                value
-                                            )
-                                        }
-                                    >
-                                        <SelectTrigger
-                                            id="translationFontSize"
-                                            className="w-full"
-                                        >
-                                            <SelectValue placeholder="Translation Font size" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="small">Small</SelectItem>
-                                            <SelectItem value="medium">
-                                                Medium
-                                            </SelectItem>
-                                            <SelectItem value="large">Large</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </AccordionContent>
-                        </AccordionItem>
-
-                        <Separator />
 
                         <AccordionItem value="item-3">
                             <AccordionTrigger className="hover:no-underline cursor-pointer hover:bg-accent/80 p-3">
@@ -215,7 +226,7 @@ export function MushafSettingsButton({
                                     </Label>
                                 </div>
                             </AccordionTrigger>
-                            <AccordionContent className="p-4">
+                            <AccordionContent className="p-3">
                                 <ChangeThemeButton />
                             </AccordionContent>
                         </AccordionItem>

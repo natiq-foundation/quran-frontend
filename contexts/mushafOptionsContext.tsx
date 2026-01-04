@@ -7,6 +7,7 @@ export interface MushafOptions {
     arabicFontSize: "small" | "medium" | "large";
     textAlign: "normal" | "center";
     translationFontSize: "small" | "medium" | "large";
+    translationVisibility: boolean;
 }
 
 const defaultMushafOptions: MushafOptions = {
@@ -14,6 +15,7 @@ const defaultMushafOptions: MushafOptions = {
     arabicFontSize: "medium",
     textAlign: "center",
     translationFontSize: "medium",
+    translationVisibility: true,
 };
 
 const [MushafOptionsProvider, useMushafOptions] =

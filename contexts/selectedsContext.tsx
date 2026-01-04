@@ -10,6 +10,7 @@ interface Selected {
     translationByWordUUID: string;
     recitationUUID: string;
     wordUUID: string;
+    bookmarkedAyahUUID: string;
 }
 
 const defaultSelected: Selected = {
@@ -20,6 +21,7 @@ const defaultSelected: Selected = {
     translationByWordUUID: "UUID",
     recitationUUID: "UUID",
     wordUUID: "UUID",
+    bookmarkedAyahUUID: "UUID",
 };
 
 const [SelectedProvider, useSelected] = createLocalStorageContext<Selected>(

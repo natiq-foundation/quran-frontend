@@ -10,11 +10,12 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { Item, ItemContent, ItemTitle } from "./ui/item";
 import { AyahBreakersResponse, Surah } from "@ntq/sdk";
 import { FindPopup } from "./popups/FindPopup";
-import MakkahOutlinedIcon from "./quran/MakkahOutlinedIcon";
-import MadinehOutlinedIcon from "./quran/MadinehOutlinedIcon";
+import { useSelected } from "../contexts/selectedsContext";
+import { toast } from "sonner";
 
 interface FindBarProps {
     takhtitsAyahsBreakers: AyahBreakersResponse[];
@@ -31,6 +32,8 @@ export function FindBar({
     const [top, setTop] = useState(2);
     const [lastScrollY, setLastScrollY] = useState(0);
     const [isOpen, setIsOpen] = useState(false);
+
+    const [selected, setSelected] = useSelected();
 
     // Calculate current ayah info from provided ayah UUID and takhtits data
     const currentAyahInfo = useMemo(() => {
@@ -105,6 +108,16 @@ export function FindBar({
         return () => window.removeEventListener("scroll", handleScroll);
     }, [lastScrollY]);
 
+
+    const onBookmarkClicked = () => {
+        if (ayahUuid === selected.bookmarkedAyahUUID) {
+            setSelected(prev => ({ ...prev, bookmarkedAyahUUID: "UUID" }))
+        } else {
+            setSelected(prev => ({ ...prev, bookmarkedAyahUUID: ayahUuid || "UUID" }));
+            toast.success("Ayah Bookmarked!")
+        }
+    }
+
     return (
         <>
             <Item
@@ -112,14 +125,19 @@ export function FindBar({
                 onClick={() => setIsOpen(true)}
                 variant="default"
                 data-find-bar="true"
-                className="p-2 pl-6 pr-6 z-10 max-w-full sticky top-20 bg-muted/80 backdrop-blur supports-backdrop-filter:bg-muted/80 cursor-pointer rounded-full"
+                className="p-1 pl-6 pr-6 z-10 max-w-full sticky top-20 bg-muted/80 backdrop-blur supports-backdrop-filter:bg-muted/80 cursor-pointer rounded-full"
             >
                 <ItemContent>
                     <ItemTitle className="w-full flex flex-row items-center justify-between gap-0.5">
                         <div className="flex flex-row items-center gap-3">
-                            <MadinehOutlinedIcon />
+                            <Button size="icon-sm" variant="ghost" onClick={(e) => {
+                                e.stopPropagation();
+                                onBookmarkClicked();
+                            }}>
+                                <Symbol icon="bookmark" filled={ayahUuid === selected.bookmarkedAyahUUID ? true : false} />
+                            </Button>
                             <h3>
-                                {currentAyahInfo.surahName +
+                                {currentAyahInfo.surahnumber + ". " + currentAyahInfo.surahName +
                                     ": " +
                                     currentAyahInfo.ayahnumber}
                             </h3>

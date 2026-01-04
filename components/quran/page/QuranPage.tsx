@@ -8,11 +8,6 @@ import { useEffect, useEffectEvent, useState } from "react";
 import { FindBar } from "@/components/FindBar";
 import { getTranslations } from "@/app/actions/getTranslations";
 
-interface AyahRange {
-    offset: number;
-    limit: number;
-}
-
 interface QuranPageProps {
     index: number;
     mushaf?: string;
@@ -66,7 +61,7 @@ export function QuranPage({
                     parsed?.translationUUID &&
                     parsed.translationUUID !== "UUID" &&
                     parsed.translationUUID !== "";
-            } catch (e) {
+            } catch (_e) {
                 // If parsing fails, treat as no stored value
             }
         }
@@ -100,7 +95,7 @@ export function QuranPage({
     }
 
     return (
-        <div className="py-0 flex flex-col gap-6">
+        <div className="flex flex-col gap-6 bg-muted/50 rounded-2xl pb-6 lg:w-[60vw]">
             <FindBar
                 takhtitsAyahsBreakers={takhtitsAyahsBreakers}
                 surahs={surahs}

@@ -14,6 +14,7 @@ import { useSelected } from "@/contexts/selectedsContext";
 import { RecitationList } from "@ntq/sdk";
 import { useEffect, useEffectEvent, useState } from "react";
 import { useWindowSize } from "../useWindowSize";
+import { UserList } from "@/components/user-list";
 
 type PlayerSettingsButtonProps = {
     recitations: RecitationList[];
@@ -73,7 +74,7 @@ export function PlayerSettingsButton({
         <Sheet>
             <SheetTrigger asChild>
                 <Button variant="ghost" size="icon-lg">
-                    <Symbol icon="tune" />
+                    <Symbol icon="account_circle" />
                 </Button>
             </SheetTrigger>
             <SheetContent
@@ -81,15 +82,10 @@ export function PlayerSettingsButton({
                 side={windowWidth <= 800 ? "bottom" : "right"}
             >
                 <SheetHeader>
-                    <SheetTitle>Settings</SheetTitle>
+                    <SheetTitle>Recitations Settings</SheetTitle>
                 </SheetHeader>
-                <div className="p-4 space-y-6">
-                    <SelectRecitation
-                        recitations={recitations}
-                        selectedReciter={selected.recitationUUID}
-                        onValueChange={onRecitationChanged}
-                    />
-                </div>
+
+                <UserList users={recitations.map((recitation) => ({ id: recitation.uuid, avatar: "", description: recitation.recitation_date, name: recitation.reciter?.name || "Name" }))} onSelect={(uuid) => setSelected(prev => ({ ...prev, recitationUUID: uuid as string }))} />
             </SheetContent>
         </Sheet>
     );

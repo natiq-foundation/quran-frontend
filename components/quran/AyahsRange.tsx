@@ -12,7 +12,7 @@ import { useSelected } from "@/contexts/selectedsContext";
 import { ActiveOnVisible } from "../activeOnVisible/ActiveOnVisible";
 import SurahHeader from "./SurahHeader";
 import { Skeleton } from "../ui/skeleton";
-import { AlertCircleIcon, CheckCircle2Icon, PopcornIcon, RefreshCcwIcon } from "lucide-react"
+import { AlertCircleIcon, RefreshCcwIcon } from "lucide-react"
 import {
     Alert,
     AlertDescription,
@@ -178,7 +178,7 @@ export function AyahsRange({
 
     if (loadingAyahs) {
         return (
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-4 items-center">
                 <Skeleton className="h-[60px] w-[622px] rounded-md" />
                 <Skeleton className="h-[60px] w-[622px] rounded-md" />
                 <Skeleton className="h-[60px] w-[622px] rounded-md" />
@@ -208,7 +208,7 @@ export function AyahsRange({
 
     if (ayahs.length === 0) {
         return (
-            <div className={className}>
+            <div className="flex items-center justify-center">
                 <p>No ayahs found in the specified range.</p>
             </div>
         );
@@ -231,7 +231,7 @@ export function AyahsRange({
     };
 
     return (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 ml-4 mr-4">
             {ayahs.map((ayah, index) => (
                 <div key={index}>
                     {ayah.surah &&
