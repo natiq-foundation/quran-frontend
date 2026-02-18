@@ -6,7 +6,7 @@ import {
     PopoverTrigger,
 } from "@/components/ui/popover";
 import { Button } from "../ui/button";
-import { Symbol } from "@yakad/symbols";
+import { Material } from "@yakad/symbols";
 import { RepeatRange, usePlayOptions } from "@/contexts/playOptionsContext";
 
 export function RepeatButton() {
@@ -44,7 +44,7 @@ export function RepeatButton() {
                         e.preventDefault();
                     }}
                 >
-                    <Symbol
+                    <Material
                         icon={
                             options.repeatMode === "ayah"
                                 ? "repeat_one"
@@ -75,7 +75,7 @@ export function RepeatButton() {
                             className="justify-start"
                             onClick={() => handleRepeatChange("ayah", "ayah")}
                         >
-                            <Symbol icon="repeat_one" /> Ayah
+                            <Material icon="repeat_one" /> Ayah
                         </Button>
                         {skipTypes.map((type) => (
                             <Button
@@ -92,7 +92,7 @@ export function RepeatButton() {
                                     handleRepeatChange(type, "range")
                                 }
                             >
-                                <Symbol icon="repeat" />{" "}
+                                <Material icon="repeat" />{" "}
                                 {type.charAt(0).toUpperCase() + type.slice(1)}
                             </Button>
                         ))}

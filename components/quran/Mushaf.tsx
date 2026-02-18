@@ -60,13 +60,11 @@ export default async function Mushaf({ name }: { name: string }) {
     const calculated_pages = calculatePages(takhtitsAyahsBreakers);
 
     return (
-        <div>
-            <MushafClient
-                calculated_pages={calculated_pages}
-                takhtitsAyahsBreakers={takhtitsAyahsBreakers}
-                surahs={surahs}
-                mushaf={name}
-            />
-        </div>
+        <MushafClient
+            calculated_pages={calculated_pages}
+            takhtitsAyahsBreakers={takhtitsAyahsBreakers}
+            surahs={surahs}
+            mushaf={name}
+        />
     );
 }

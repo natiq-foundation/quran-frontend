@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 import { useMemo, useState } from "react";
 import { LangCodeType, langNameInEnglish } from "@yakad/lib";
 import { ButtonGroup } from "../ui/button-group";
-import { Symbol } from "@yakad/symbols";
+import { Material } from "@yakad/symbols";
 
 export function SelectTranslation({
     translations,
@@ -93,7 +93,7 @@ export function SelectTranslation({
                             aria-expanded={languageOpen}
                             className="justify-between"
                         >
-                            <Symbol icon="language" />
+                            <Material icon="language" />
                             {selectedLanguage
                                 ? langNameInEnglish(
                                       selectedLanguage as LangCodeType
@@ -166,7 +166,7 @@ export function SelectTranslation({
                             aria-expanded={translatorOpen}
                             className="justify-between"
                         >
-                            <Symbol icon="person" />
+                            <Material icon="person" />
                             {selectedTranslation
                                 ? getTranslatorName(selectedTranslation)
                                 : "Select Translator..."}

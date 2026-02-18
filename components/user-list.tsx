@@ -10,13 +10,21 @@ interface User {
     avatar: string,
 }
 
-export function UserList({ users, onSelect }: { users: User[], onSelect: (id: number | string) => void }) {
+export function UserList({
+    users,
+    onSelect,
+    selectedId,
+}: {
+    users: User[];
+    onSelect: (id: number | string) => void;
+    selectedId?: number | string;
+}) {
     return (
         <div className="w-full max-w-4xl mx-auto p-6 space-y-8 bg-background overflow-y-auto">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h1 className="text-2xl font-semibold tracking-tight">Recitations</h1>
-                    <p className="text-sm text-muted-foreground">Selecte your prefered reciter</p>
+                    <p className="text-sm text-muted-foreground">Select your prefered reciter</p>
                 </div>
             </div>
 
@@ -30,17 +38,25 @@ export function UserList({ users, onSelect }: { users: User[], onSelect: (id: nu
 
             <div className="rounded-lg border bg-card shadow-sm overflow-hidden">
                 <div className="divide-y">
-                    {users.map((user) => (
+                    {users.map((user) => {
+                        const isSelected = selectedId !== undefined && user.id === selectedId;
+                        return (
                         <div
                             key={user.id}
-                            className="group flex items-center justify-between p-4 hover:bg-muted/50 transition-colors cursor-pointer"
+                            aria-selected={isSelected}
+                            className={[
+                                "group flex items-center justify-between p-4 transition-colors cursor-pointer",
+                                isSelected
+                                    ? "bg-accent text-accent-foreground"
+                                    : "hover:bg-muted/50",
+                            ].join(" ")}
                             onClick={() => onSelect(user.id)}
                         >
                             <div className="flex items-center gap-4">
                                 <div className="relative">
                                     <Avatar className="h-10 w-10 border">
                                         <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name} />
-                                        <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                                        <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
                                     </Avatar>
                                 </div>
                                 <div className="flex flex-col">
@@ -48,18 +64,9 @@ export function UserList({ users, onSelect }: { users: User[], onSelect: (id: nu
                                     <span className="text-xs text-muted-foreground mt-1">{user.description}</span>
                                 </div>
                             </div>
-
-                            <div className="flex items-center gap-6">
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-                                >
-                                    <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                            </div>
                         </div>
-                    ))}
+                        );
+                    })}
                 </div>
             </div>
         </div>

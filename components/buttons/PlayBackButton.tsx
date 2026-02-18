@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Popover, PopoverContent, PopoverAnchor } from "../ui/popover";
 import { Button } from "../ui/button";
-import { IconCode, Symbol } from "@yakad/symbols";
+import { IconCode, Material } from "@yakad/symbols";
 import { useOnRightClick } from "@yakad/use-interactions";
 import {
     usePlayOptions,
@@ -73,7 +73,7 @@ export function PlayBackButton() {
                     onClick={handleLeftClick}
                     onContextMenu={(e) => e.preventDefault()}
                 >
-                    <Symbol icon={currentIcon} />
+                    <Material icon={currentIcon} />
                 </Button>
             </PopoverAnchor>
             <PopoverContent className="w-40" align="center" side="top">
@@ -95,7 +95,7 @@ export function PlayBackButton() {
                                     setPopoverOpen(false);
                                 }}
                             >
-                                <Symbol icon={icon} />
+                                <Material icon={icon} />
                                 {label}
                             </Button>
                         ))}

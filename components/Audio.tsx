@@ -5,7 +5,7 @@ import { getSurah } from "@/app/actions/getSurahs";
 import { usePlayOptions } from "@/contexts/playOptionsContext";
 import { useSelected } from "@/contexts/selectedsContext";
 import { SurahDetail } from "@ntq/sdk";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export function Audio(
     restProps: Omit<React.HTMLAttributes<HTMLAudioElement>, "style">
@@ -29,10 +29,133 @@ export function Audio(
     // Track the last ayah UUID set by the timeupdate handler to avoid loops
     const lastAyahFromTimeUpdate = useRef<string | undefined>(undefined);
 
+    // Keep latest values accessible inside event handlers without re-binding them.
+    const repeatModeRef = useRef(playOptions.repeatMode);
+    const repeatRangeRef = useRef(playOptions.repeatRange);
+    const selectedAyahUUIDRef = useRef<string | undefined>(selected.ayahUUID);
+    const pageAyahUUIDsRef = useRef<string[] | undefined>(
+        playOptions.pageAyahUUIDs
+    );
+    const juzAyahUUIDsRef = useRef<string[] | undefined>(
+        playOptions.juzAyahUUIDs
+    );
+    const hizbAyahUUIDsRef = useRef<string[] | undefined>(
+        playOptions.hizbAyahUUIDs
+    );
+    const playingRef = useRef(isPlaying);
+
+    useEffect(() => {
+        repeatModeRef.current = playOptions.repeatMode;
+        repeatRangeRef.current = playOptions.repeatRange;
+        selectedAyahUUIDRef.current = selected.ayahUUID;
+        pageAyahUUIDsRef.current = playOptions.pageAyahUUIDs;
+        juzAyahUUIDsRef.current = playOptions.juzAyahUUIDs;
+        hizbAyahUUIDsRef.current = playOptions.hizbAyahUUIDs;
+        playingRef.current = isPlaying;
+    }, [
+        playOptions.repeatMode,
+        playOptions.repeatRange,
+        playOptions.pageAyahUUIDs,
+        playOptions.juzAyahUUIDs,
+        playOptions.hizbAyahUUIDs,
+        selected.ayahUUID,
+        isPlaying,
+    ]);
+
     const timestampToSeconds = (timestamp: string): number => {
         const [hours, minutes, seconds] = timestamp.split(":").map(Number);
         return hours * 3600 + minutes * 60 + seconds;
     };
+
+    const getAyahSegmentSeconds = useCallback(
+        (ayahUUID: string | undefined) => {
+            if (!audioRef.current || !ayahUUID) return null;
+            if (ayahsTimestamps.length === 0 || surahAyahs.length === 0)
+                return null;
+
+            const index = surahAyahs.findIndex((a) => a.uuid === ayahUUID);
+            if (index === -1) return null;
+
+            const start =
+                index === 0
+                    ? 0
+                    : timestampToSeconds(ayahsTimestamps[index - 1]);
+
+            const duration = Number.isFinite(audioRef.current.duration)
+                ? audioRef.current.duration
+                : undefined;
+
+            const end =
+                index >= surahAyahs.length - 1
+                    ? duration
+                    : timestampToSeconds(ayahsTimestamps[index]);
+
+            if (end === undefined) {
+                return { start, end: Number.POSITIVE_INFINITY };
+            }
+            if (!Number.isFinite(start) || !Number.isFinite(end)) return null;
+            if (end <= start) return null;
+
+            // Trim a little from the end of the ayah so the repeat
+            // feels tighter and doesn't leak into the next ayah.
+            const trimFromEnd = 0.4; // seconds
+            const logicalEnd = Math.max(start, end - trimFromEnd);
+
+            return { start, end: logicalEnd };
+        },
+        [ayahsTimestamps, surahAyahs]
+    );
+
+    const getAyahsSegmentSeconds = useCallback(
+        (ayahUUIDs: string[] | undefined) => {
+            if (!audioRef.current || !ayahUUIDs || ayahUUIDs.length === 0)
+                return null;
+            if (ayahsTimestamps.length === 0 || surahAyahs.length === 0)
+                return null;
+
+            // Map the provided ayahs to indices within the currently loaded surah ayahs
+            const indices = ayahUUIDs
+                .map((uuid) => surahAyahs.findIndex((a) => a.uuid === uuid))
+                .filter((i) => i >= 0)
+                .sort((a, b) => a - b);
+
+            if (indices.length === 0) return null;
+
+            const firstIndex = indices[0];
+            const lastIndex = indices[indices.length - 1];
+
+            const start =
+                firstIndex === 0
+                    ? 0
+                    : timestampToSeconds(ayahsTimestamps[firstIndex - 1]);
+
+            const duration = Number.isFinite(audioRef.current.duration)
+                ? audioRef.current.duration
+                : undefined;
+
+            const end =
+                lastIndex >= surahAyahs.length - 1
+                    ? duration
+                    : timestampToSeconds(ayahsTimestamps[lastIndex]);
+
+            if (end === undefined) {
+                return { start, end: Number.POSITIVE_INFINITY };
+            }
+            if (!Number.isFinite(start) || !Number.isFinite(end)) return null;
+            if (end <= start) return null;
+
+            // Trim a bit from the end so the repeat feels tight
+            const trimFromEnd = 0.4;
+            const logicalEnd = Math.max(start, end - trimFromEnd);
+
+            return {
+                start,
+                end: logicalEnd,
+                firstUUID: surahAyahs[firstIndex]?.uuid as string | undefined,
+            };
+        },
+        [ayahsTimestamps, surahAyahs]
+    );
 
     useEffect(() => {
         if (selected.recitationUUID && selected.recitationUUID !== "UUID") {
@@ -183,11 +306,93 @@ export function Audio(
 
             if (ayahIndex < surahAyahs.length && surahAyahs[ayahIndex]) {
                 const newAyahUUID = surahAyahs[ayahIndex].uuid;
-                lastAyahFromTimeUpdate.current = newAyahUUID;
-                setSelected((prev) => ({
-                    ...prev,
-                    ayahUUID: newAyahUUID,
-                }));
+                const repeatMode = repeatModeRef.current;
+                const lockedAyahUUID = selectedAyahUUIDRef.current;
+
+                if (repeatMode === "ayah") {
+                    // If user didn't explicitly pick an ayah, lock to the currently-playing one.
+                    const effectiveAyahUUID = lockedAyahUUID ?? newAyahUUID;
+                    if (selectedAyahUUIDRef.current !== effectiveAyahUUID) {
+                        selectedAyahUUIDRef.current = effectiveAyahUUID;
+                    }
+                    lastAyahFromTimeUpdate.current = effectiveAyahUUID;
+                    setSelected((prev) => ({
+                        ...prev,
+                        ayahUUID: effectiveAyahUUID,
+                    }));
+                } else {
+                    // Normal continuous playback: keep selected ayah in sync with audio.
+                    lastAyahFromTimeUpdate.current = newAyahUUID;
+                    selectedAyahUUIDRef.current = newAyahUUID;
+                    setSelected((prev) => ({
+                        ...prev,
+                        ayahUUID: newAyahUUID,
+                    }));
+                }
+            }
+
+            // Loop the current ayah segment when repeatMode is "ayah".
+            if (repeatModeRef.current === "ayah") {
+                const segment = getAyahSegmentSeconds(selectedAyahUUIDRef.current);
+                if (segment) {
+                    const effectiveEnd = Number.isFinite(segment.end)
+                        ? segment.end
+                        : Number.isFinite(audio.duration)
+                          ? audio.duration
+                          : undefined;
+
+                    if (
+                        effectiveEnd !== undefined &&
+                        currentTime >= effectiveEnd
+                    ) {
+                        audio.currentTime = segment.start;
+                        if (playingRef.current) {
+                            audio.play().catch(() => {});
+                        }
+                    }
+                }
+            }
+
+            // Loop the current mushaf page when repeatMode is "range" and repeatRange is "page".
+            if (
+                repeatModeRef.current === "range" &&
+                (repeatRangeRef.current === "page" ||
+                    repeatRangeRef.current === "juz" ||
+                    repeatRangeRef.current === "hizb")
+            ) {
+                const range = repeatRangeRef.current;
+                const ayahUUIDs =
+                    range === "page"
+                        ? pageAyahUUIDsRef.current
+                        : range === "juz"
+                          ? juzAyahUUIDsRef.current
+                          : hizbAyahUUIDsRef.current;
+
+                const segment = getAyahsSegmentSeconds(ayahUUIDs);
+                if (segment) {
+                    const effectiveEnd = Number.isFinite(segment.end)
+                        ? segment.end
+                        : Number.isFinite(audio.duration)
+                          ? audio.duration
+                          : undefined;
+
+                    if (effectiveEnd !== undefined && currentTime >= effectiveEnd) {
+                        audio.currentTime = segment.start;
+                        // Optionally reset selected ayah to the first ayah of the range
+                        const firstUUID = segment.firstUUID;
+                        if (firstUUID) {
+                            selectedAyahUUIDRef.current = firstUUID;
+                            lastAyahFromTimeUpdate.current = firstUUID;
+                            setSelected((prev) => ({
+                                ...prev,
+                                ayahUUID: firstUUID,
+                            }));
+                        }
+                        if (playingRef.current) {
+                            audio.play().catch(() => {});
+                        }
+                    }
+                }
             }
         };
 
@@ -196,7 +401,14 @@ export function Audio(
         return () => {
             audio.removeEventListener("timeupdate", handleTimeUpdate);
         };
-    }, [ayahsTimestamps, surahAyahs, setSelected]);
+    }, [
+        ayahsTimestamps,
+        surahAyahs,
+        setSelected,
+        setPlayOptions,
+        getAyahSegmentSeconds,
+        getAyahsSegmentSeconds,
+    ]);
 
     // Jump to ayah timestamp when selected ayah changes
     useEffect(() => {
@@ -249,10 +461,63 @@ export function Audio(
     }, [playBackRate, playBackActive]);
 
     const handleEnded = () => {
-        setPlayOptions((prev) => ({
-            ...prev,
-            playing: false,
-        }));
+        const audio = audioRef.current;
+        const repeatMode = repeatModeRef.current;
+        const repeatRange = repeatRangeRef.current;
+
+        // Repeat single ayah: jump back to that ayah's start and keep playing.
+        if (repeatMode === "ayah" && audio) {
+            const segment = getAyahSegmentSeconds(selectedAyahUUIDRef.current);
+            if (segment) {
+                audio.currentTime = segment.start;
+                audio.play().catch(() => {});
+                setPlayOptions((prev) => ({ ...prev, playing: true }));
+                return;
+            }
+        }
+
+        // Repeat surah (range): restart the surah audio when it ends.
+        if (repeatMode === "range" && repeatRange === "surah" && audio) {
+            audio.currentTime = 0;
+            lastAyahFromTimeUpdate.current = undefined;
+            if (surahAyahs[0]?.uuid) {
+                setSelected((prev) => ({ ...prev, ayahUUID: surahAyahs[0].uuid }));
+            }
+            audio.play().catch(() => {});
+            setPlayOptions((prev) => ({ ...prev, playing: true }));
+            return;
+        }
+
+        // Repeat page/juz/hizb segments (range): jump back to segment start.
+        if (
+            repeatMode === "range" &&
+            (repeatRange === "page" ||
+                repeatRange === "juz" ||
+                repeatRange === "hizb") &&
+            audio
+        ) {
+            const ayahUUIDs =
+                repeatRange === "page"
+                    ? pageAyahUUIDsRef.current
+                    : repeatRange === "juz"
+                      ? juzAyahUUIDsRef.current
+                      : hizbAyahUUIDsRef.current;
+            const segment = getAyahsSegmentSeconds(ayahUUIDs);
+            if (segment) {
+                audio.currentTime = segment.start;
+                if (segment.firstUUID) {
+                    selectedAyahUUIDRef.current = segment.firstUUID;
+                    lastAyahFromTimeUpdate.current = segment.firstUUID;
+                    setSelected((prev) => ({ ...prev, ayahUUID: segment.firstUUID }));
+                }
+                audio.play().catch(() => {});
+                setPlayOptions((prev) => ({ ...prev, playing: true }));
+                return;
+            }
+        }
+
+        // Default: stop when audio ends.
+        setPlayOptions((prev) => ({ ...prev, playing: false }));
     };
 
     return (

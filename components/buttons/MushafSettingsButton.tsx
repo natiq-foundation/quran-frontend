@@ -19,7 +19,7 @@ import { Button } from "../ui/button";
 import { useMushafOptions } from "@/contexts/mushafOptionsContext";
 import { SelectTranslation } from "../inputs/SelectTranslation";
 import { PaginatedTranslationListList } from "@ntq/sdk";
-import { Symbol } from "@yakad/symbols";
+import { Material } from "@yakad/symbols";
 import { ChangeThemeButton } from "./ChangeThemeButton";
 import { useWindowSize } from "../useWindowSize";
 import { Separator } from "../ui/separator";
@@ -37,7 +37,6 @@ export function MushafSettingsButton({
     translations: PaginatedTranslationListList;
 }) {
     const [mushafOptions, setMushafOptions] = useMushafOptions();
-    const [windowWidth] = useWindowSize();
 
     const handleSelectChange = (name: string, value: string) => {
         setMushafOptions((prev) => ({ ...prev, [name]: value }));
@@ -47,15 +46,15 @@ export function MushafSettingsButton({
         <Sheet>
             <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" aria-label="Settings">
-                    <Symbol icon="settings" />
+                    <Material icon="settings" />
                 </Button>
             </SheetTrigger>
             <SheetContent
                 className="overflow-y-auto"
-                side={windowWidth <= 800 ? "bottom" : "right"}
+                side="right"
             >
                 <SheetHeader className="flex flex-row">
-                    <Symbol icon="settings" />
+                    <Material icon="settings" />
                     <SheetTitle>Settings</SheetTitle>
                 </SheetHeader>
 
@@ -69,7 +68,7 @@ export function MushafSettingsButton({
                         <AccordionItem value="item-1">
                             <AccordionTrigger className="hover:no-underline cursor-pointer hover:bg-accent/80 p-3">
                                 <Label className="text-base font-semibold">
-                                    <Symbol icon="translate" />
+                                    <Material icon="translate" />
                                     Translation
                                 </Label>
                             </AccordionTrigger>
@@ -90,7 +89,7 @@ export function MushafSettingsButton({
                         <AccordionItem value="item-2">
                             <AccordionTrigger className="hover:no-underline cursor-pointer hover:bg-accent/80 p-3">
                                 <Label className="text-base font-semibold">
-                                    <Symbol icon="match_case" />
+                                    <Material icon="match_case" />
                                     Font
                                 </Label>
                             </AccordionTrigger>
@@ -98,7 +97,7 @@ export function MushafSettingsButton({
                                 <div className="flex gap-2 justify-around flex-col">
                                     <div className="space-y-2">
                                         <Label htmlFor="arabicFont" className="text-sm">
-                                            <Symbol icon="brand_family" />
+                                            <Material icon="brand_family" />
                                             Arabic Font
                                         </Label>
                                         <Select
@@ -123,7 +122,7 @@ export function MushafSettingsButton({
                                             htmlFor="arabicFontSize"
                                             className="text-sm"
                                         >
-                                            <Symbol icon="format_size" />
+                                            <Material icon="format_size" />
                                             Arabic Font size
                                         </Label>
                                         <Select
@@ -157,7 +156,7 @@ export function MushafSettingsButton({
                                             htmlFor="translationFontSize"
                                             className="text-sm"
                                         >
-                                            <Symbol icon="format_size" />
+                                            <Material icon="format_size" />
                                             Translation Font size
                                         </Label>
                                         <Select
@@ -187,7 +186,7 @@ export function MushafSettingsButton({
 
                                     <div className="space-y-2">
                                         <Label htmlFor="textAlign" className="text-sm">
-                                            <Symbol icon="article" />
+                                            <Material icon="article" />
                                             Text align
                                         </Label>
                                         <Select
@@ -201,11 +200,11 @@ export function MushafSettingsButton({
                                             </SelectTrigger>
                                             <SelectContent>
                                                 <SelectItem value="normal">
-                                                    <Symbol icon="format_align_right" />
+                                                    <Material icon="format_align_right" />
                                                     Normal
                                                 </SelectItem>
                                                 <SelectItem value="center">
-                                                    <Symbol icon="format_align_center" />
+                                                    <Material icon="format_align_center" />
                                                     Center
                                                 </SelectItem>
                                             </SelectContent>
@@ -221,7 +220,7 @@ export function MushafSettingsButton({
                             <AccordionTrigger className="hover:no-underline cursor-pointer hover:bg-accent/80 p-3">
                                 <div className="space-y-4">
                                     <Label className="text-base font-semibold">
-                                        <Symbol icon="colors" />
+                                        <Material icon="colors" />
                                         Theme
                                     </Label>
                                 </div>

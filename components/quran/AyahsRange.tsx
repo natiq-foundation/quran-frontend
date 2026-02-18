@@ -18,6 +18,7 @@ import {
     AlertDescription,
     AlertTitle,
 } from "@/components/ui/alert"
+import { Bismillah } from "@/components/quran/Bismillah";
 
 
 interface AyahRangeProps {
@@ -113,8 +114,6 @@ export function AyahsRange({
         return () => window.clearTimeout(id);
     }, [ayahs, selected.ayahUUID, loadingAyahs]);
 
-
-
     const loadAyahs = useCallback(async (isActive: boolean) => {
         try {
             setLoadingAyahs(true);
@@ -178,12 +177,12 @@ export function AyahsRange({
 
     if (loadingAyahs) {
         return (
-            <div className="flex flex-col gap-4 items-center">
-                <Skeleton className="h-[60px] w-[622px] rounded-md" />
-                <Skeleton className="h-[60px] w-[622px] rounded-md" />
-                <Skeleton className="h-[60px] w-[622px] rounded-md" />
-                <Skeleton className="h-[60px] w-[622px] rounded-md" />
-                <Skeleton className="h-[60px] w-[622px] rounded-md" />
+            <div className="flex flex-col gap-4 items-center p-5">
+                <Skeleton className="h-[60px] w-full rounded-md" />
+                <Skeleton className="h-[60px] w-full rounded-md" />
+                <Skeleton className="h-[60px] w-full rounded-md" />
+                <Skeleton className="h-[60px] w-full rounded-md" />
+                <Skeleton className="h-[60px] w-full rounded-md" />
             </div>
         );
     }
@@ -208,7 +207,7 @@ export function AyahsRange({
 
     if (ayahs.length === 0) {
         return (
-            <div className="flex items-center justify-center">
+            <div className="flex items-center justify-center p-5">
                 <p>No ayahs found in the specified range.</p>
             </div>
         );
@@ -231,7 +230,7 @@ export function AyahsRange({
     };
 
     return (
-        <div className="flex flex-col gap-4 ml-4 mr-4">
+        <div className="flex flex-col gap-4 p-4">
             {ayahs.map((ayah, index) => (
                 <div key={index}>
                     {ayah.surah &&
@@ -240,47 +239,50 @@ export function AyahsRange({
                             ayah.surah.uuid) && (
                             <SurahHeader
                                 surah={ayah.surah}
-                                bismillah={(surah) =>
-                                    surah?.bismillah?.is_ayah ? (
-                                        <ActiveOnVisible
-                                            onVisibilityChange={(visible) =>
-                                                onVisibilityChange(
-                                                    visible,
-                                                    index
-                                                )
-                                            }
-                                        >
-                                            <Ayah
-                                                number={1}
-                                                words={ayah.text.split(" ")}
-                                                id={`ayah-${ayah.uuid}`}
-                                                ref={(el) => {
-                                                    ayahsRefs.current[
-                                                        ayah.uuid
-                                                    ] = el;
-                                                }}
-                                                translationRtl={
-                                                    selected.translationRtl
-                                                }
-                                                mushafOptions={mushafOptions}
-                                                selected={
-                                                    ayah.uuid ===
-                                                    selected.ayahUUID
-                                                }
-                                                translationText={
-                                                    translations?.[index]?.text
-                                                }
-                                            />
-                                        </ActiveOnVisible>
-                                    ) : (
-                                        <div style={{ paddingTop: "2rem" }}>
-                                            <p>{surah?.bismillah?.text}</p>
-                                            <p>{translations?.[index]?.text}</p>
-                                        </div>
-                                    )
-                                }
+                                makkiMadani="makki"
                             />
                         )}
+                    {ayah.surah?.bismillah?.is_ayah ?
+                        (<ActiveOnVisible
+                            onVisibilityChange={(visible) =>
+                                onVisibilityChange(
+                                    visible,
+                                    index
+                                )
+                            }
+                        >
+                            <Ayah
+                                number={1}
+                                words={ayah.text.split(" ")}
+                                id={`ayah-${ayah.uuid}`}
+                                ref={(el) => {
+                                    ayahsRefs.current[
+                                        ayah.uuid
+                                    ] = el;
+                                }}
+                                translationRtl={
+                                    selected.translationRtl
+                                }
+                                mushafOptions={mushafOptions}
+                                selected={
+                                    ayah.uuid ===
+                                    selected.ayahUUID
+                                }
+                                translationText={
+                                    translations?.[index]?.text
+                                }
+                                bookmarked={selected.bookmarkedAyahUUID === ayah.uuid}
+                                onBookmark={() => setSelected(prev => ({ ...prev, bookmarkedAyahUUID: prev.bookmarkedAyahUUID === ayah.uuid ? "UUID" : ayah.uuid }))}
+                            />
+                        </ActiveOnVisible>) :
+                        ayah.number === 1 && ayah.surah?.bismillah?.text !== "" ? (
+                            <Bismillah
+                                id={`bismillah-${ayah.uuid}`}
+                                words={ayah.surah?.bismillah?.text.split(" ") || []}
+                                translationRtl={selected.translationRtl}
+                                mushafOptions={mushafOptions}
+                                translationText={translations?.[index]?.bismillah ?? undefined} />
+                        ) : ""}
 
                     {!ayah.surah?.bismillah.is_ayah && (
                         <ActiveOnVisible
@@ -300,6 +302,8 @@ export function AyahsRange({
                                 mushafOptions={mushafOptions}
                                 sajdah={ayah.sajdah || "none"}
                                 selected={ayah.uuid === selected.ayahUUID}
+                                bookmarked={selected.bookmarkedAyahUUID === ayah.uuid}
+                                onBookmark={() => setSelected(prev => ({ ...prev, bookmarkedAyahUUID: prev.bookmarkedAyahUUID === ayah.uuid ? "UUID" : ayah.uuid }))}
                                 onClick={() => handleAyahClick(ayah.uuid)}
                             />
                         </ActiveOnVisible>

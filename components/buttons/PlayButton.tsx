@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { usePlayOptions } from "@/contexts/playOptionsContext";
-import { Symbol } from "@yakad/symbols";
+import { Material } from "@yakad/symbols";
 import { Spinner } from "../ui/spinner";
 
 export function PlayButton() {
@@ -26,9 +26,9 @@ export function PlayButton() {
             {playOptions.loading ? (
                 <Spinner />
             ) : playOptions.playing ? (
-                <Symbol icon="pause" filled />
+                <Material icon="pause" filled />
             ) : (
-                <Symbol icon="play_arrow" filled />
+                <Material icon="play_arrow" filled />
             )}
         </Button>
     );

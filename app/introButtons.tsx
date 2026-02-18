@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { useSelected } from "../contexts/selectedsContext";
 import { useRouter } from "next/navigation";
-import { Symbol } from "@yakad/symbols";
+import { Material } from "@yakad/symbols";
 
 export default function IntroButtons() {
     const [selected, setSelected] = useSelected();
@@ -14,15 +14,13 @@ export default function IntroButtons() {
     const router = useRouter();
 
     const handleOpenBookmarkClick = () => {
-        setSelected(prev => ({ ...prev, ayahUUID: prev.bookmarkedAyahUUID }));
-
         setLoading(true);
         router.push("/mushaf/hafs");
     }
 
     return (
-        <Button onClick={handleOpenBookmarkClick} variant="outline" disabled={loading}>
-            <Symbol icon="bookmark" />
+        <Button onClick={handleOpenBookmarkClick} variant="outline" disabled={loading || selected.bookmarkedAyahUUID === "UUID"} >
+            <Material icon="bookmark" />
             Open bookmark
             {loading && <Spinner />}
         </Button>

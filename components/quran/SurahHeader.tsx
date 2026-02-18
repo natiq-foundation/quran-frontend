@@ -1,3 +1,5 @@
+import { Symbol } from "@yakad/symbols";
+
 interface SurahHeaderProps {
     surah?: {
         uuid?: string;
@@ -7,22 +9,25 @@ interface SurahHeaderProps {
             text?: string;
             is_ayah?: boolean;
         };
+        number: number;
     };
-    bismillah: (surah: SurahHeaderProps["surah"]) => React.ReactNode;
+    makkiMadani: "makki" | "maddani";
 }
 
-export default function SurahHeader({ surah, bismillah }: SurahHeaderProps) {
+export default function SurahHeader({ surah, makkiMadani }: SurahHeaderProps) {
     if (!surah) return null;
 
     return (
-        <div className="mb-1.5 text-center">
-            <p style={{ marginBottom: "0.5rem" }}>
-                {(surah?.names || [{ name: "NOTFOUND" }])[0]?.name ||
-                    "Name Not found!"}
-            </p>
-            <p style={{ color: "#666" }}>{surah?.number_of_ayahs} Ayahs</p>
-
-            {bismillah(surah)}
+        <div className="pt-3 pb-3 pr-5 pl-5 mb-4 text-center bg-primary/20 rounded-2xl flex flex-row justify-between items-center border border-primary/30">
+            <h3>{surah.number}</h3>
+            <div>
+                <h2 className="text-2xl">
+                    {(surah?.names || [{ name: "NOTFOUND" }])[0]?.name ||
+                        "Name Not found!"}
+                </h2>
+                <p>{surah?.number_of_ayahs} Ayahs</p>
+            </div>
+            {makkiMadani === "makki" ? <Symbol icon="MakkahOutlined" filled /> : <Symbol icon="MadinehOutlined" filled />}
         </div>
     );
 }
