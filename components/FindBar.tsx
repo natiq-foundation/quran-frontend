@@ -20,6 +20,7 @@ interface FindBarProps {
     ayahUuid?: string;
     onAyahSelect?: (ayahUuid: string) => void;
 }
+
 export function FindBar({
     takhtitsAyahsBreakers,
     surahs,

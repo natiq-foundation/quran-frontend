@@ -3,7 +3,7 @@
 import { MushafOptions } from "@/contexts/mushafOptionsContext";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "../ui/skeleton";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useOnRightClick, useOnOutsideClick } from "@yakad/use-interactions";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
 import { Material } from "@yakad/symbols";
@@ -37,7 +37,8 @@ export function Ayah({
     ref,
 }: AyahProps) {
     const [dropdownMenu, setDropdownMenu] = useState(false);
-    const r = useOnRightClick<HTMLDivElement>((e) => setDropdownMenu(true));
+    const rightClickRef = useRef<HTMLDivElement | null>(null);
+    useOnRightClick<HTMLDivElement>((e) => setDropdownMenu(true), rightClickRef);
     const outsideRef = useOnOutsideClick<HTMLDivElement>((e) => setDropdownMenu(false));
 
     const assignRef = useCallback(
@@ -55,12 +56,10 @@ export function Ayah({
 
     const setClickableRefs = useCallback(
         (node: HTMLDivElement | null) => {
-            // keep the right-click handler working (@yakad/use-interactions returns a ref object)
-            (r as React.MutableRefObject<HTMLDivElement | null>).current = node;
-            // expose node for parent (AyahsRange) scroll-to-selected
+            rightClickRef.current = node;
             assignRef(ref, node);
         },
-        [r, ref, assignRef]
+        [ref, assignRef]
     );
 
     const arabicFontSizeClass = {
@@ -118,7 +117,7 @@ export function Ayah({
                         </div>
                     </div>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent>
+                <DropdownMenuContent className="border-2 border-accent">
                     <DropdownMenuLabel>Ayah Actions</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={onBookmark}>

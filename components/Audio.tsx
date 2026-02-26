@@ -6,6 +6,7 @@ import { usePlayOptions } from "@/contexts/playOptionsContext";
 import { useSelected } from "@/contexts/selectedsContext";
 import { SurahDetail } from "@ntq/sdk";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 
 export function Audio(
     restProps: Omit<React.HTMLAttributes<HTMLAudioElement>, "style">
@@ -19,6 +20,13 @@ export function Audio(
     const audioRef = useRef<HTMLAudioElement | null>(null);
 
     const [recitationFileUrl, setRecitationFileUrl] = useState<string>();
+    const [recitationSurahs, setRecitationSurahs] = useState<
+        {
+            file_url: string;
+            surah_uuid: string;
+        }[]
+    >([]);
+    const [currentSurahIndex, setCurrentSurahIndex] = useState(0);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [wordsTimestamps, setWordsTimestamps] = useState<any>([]);
@@ -26,6 +34,19 @@ export function Audio(
     const [currentSurah, setCurrentSurah] = useState<SurahDetail>();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [surahAyahs, setSurahAyahs] = useState<any[]>([]);
+    const [wordsTimestampsBySurah, setWordsTimestampsBySurah] = useState<
+        Record<
+            string,
+            {
+                start: string;
+                end: string;
+                word_uuid: string;
+            }[]
+        >
+    >({});
+    const [ayahsTimestampsBySurah, setAyahsTimestampsBySurah] = useState<
+        Record<string, string[]>
+    >({});
     // Track the last ayah UUID set by the timeupdate handler to avoid loops
     const lastAyahFromTimeUpdate = useRef<string | undefined>(undefined);
 
@@ -170,31 +191,45 @@ export function Audio(
                             surah_uuid: string;
                         }[];
                         words_timestamps: {
+                            surah: string;
+                            timestamps: {
+                                start: string;
+                                end: string;
+                                word_uuid: string;
+                            }[];
+                        }[];
+                        ayahs_timestamps: {
+                            surah: string;
+                            timestamps: string[];
+                        }[];
+                    };
+
+                    const recSurahs = recitationData.recitation_surahs || [];
+                    if (!recSurahs.length) {
+                        throw new Error("Recitation surahs are empty");
+                    }
+
+                    setRecitationSurahs(recSurahs);
+                    setCurrentSurahIndex(0);
+
+                    const wordsBySurah: Record<
+                        string,
+                        {
                             start: string;
                             end: string;
                             word_uuid: string;
-                        }[];
-                        ayahs_timestamps: string[];
-                    };
+                        }[]
+                    > = {};
+                    (recitationData.words_timestamps || []).forEach((wt) => {
+                        wordsBySurah[wt.surah] = wt.timestamps || [];
+                    });
+                    setWordsTimestampsBySurah(wordsBySurah);
 
-                    setRecitationFileUrl(
-                        recitationData.recitation_surahs[0].file_url
-                    );
-                    setWordsTimestamps(recitationData.words_timestamps);
-                    setAyahsTimestamps(recitationData.ayahs_timestamps || []);
-                    // Reset the ref when recitation changes
-                    lastAyahFromTimeUpdate.current = undefined;
-
-                    const surahUuid =
-                        recitationData.recitation_surahs[0].surah_uuid;
-                    if (surahUuid) {
-                        const surah = await getSurah(surahUuid);
-                        setCurrentSurah(surah);
-
-                        if (surah.ayahs && Array.isArray(surah.ayahs)) {
-                            setSurahAyahs(surah.ayahs);
-                        }
-                    }
+                    const ayahsBySurah: Record<string, string[]> = {};
+                    (recitationData.ayahs_timestamps || []).forEach((at) => {
+                        ayahsBySurah[at.surah] = at.timestamps || [];
+                    });
+                    setAyahsTimestampsBySurah(ayahsBySurah);
                 })
                 .catch((error) => {
                     console.error("Error loading recitation:", error);
@@ -203,8 +238,54 @@ export function Audio(
         } else {
             // Reset loading state if no recitation is selected
             setPlayOptions((prev) => ({ ...prev, loading: false }));
+            setRecitationSurahs([]);
+            setCurrentSurahIndex(0);
+            setWordsTimestamps([]);
+            setAyahsTimestamps([]);
+            setWordsTimestampsBySurah({});
+            setAyahsTimestampsBySurah({});
+            setCurrentSurah(undefined);
+            setSurahAyahs([]);
         }
     }, [selected.recitationUUID, setPlayOptions]);
+
+    // Load current surah data (file URL + timestamps + ayahs) whenever
+    // recitationSurahs, currentSurahIndex, or timestamp maps change.
+    useEffect(() => {
+        const currentMeta = recitationSurahs[currentSurahIndex];
+        if (!currentMeta) return;
+
+        const surahUuid = currentMeta.surah_uuid;
+
+        setRecitationFileUrl(currentMeta.file_url);
+        setWordsTimestamps(wordsTimestampsBySurah[surahUuid] || []);
+        setAyahsTimestamps(ayahsTimestampsBySurah[surahUuid] || []);
+
+        // Reset the ref when surah changes
+        lastAyahFromTimeUpdate.current = undefined;
+
+        if (surahUuid) {
+            getSurah(surahUuid)
+                .then((surah) => {
+                    setCurrentSurah(surah);
+                    if (surah.ayahs && Array.isArray(surah.ayahs)) {
+                        setSurahAyahs(surah.ayahs);
+                    } else {
+                        setSurahAyahs([]);
+                    }
+                })
+                .catch((error) => {
+                    console.error("Error loading surah details:", error);
+                    setCurrentSurah(undefined);
+                    setSurahAyahs([]);
+                });
+        }
+    }, [
+        recitationSurahs,
+        currentSurahIndex,
+        wordsTimestampsBySurah,
+        ayahsTimestampsBySurah,
+    ]);
 
     // Handle audio loading events
     useEffect(() => {
@@ -221,6 +302,15 @@ export function Audio(
         };
 
         const handleError = () => {
+            // Ignore abort errors that happen when we intentionally
+            // change the audio src to the next surah.
+            const mediaError = audio.error;
+            if (mediaError && mediaError.code === 1) {
+                // MEDIA_ERR_ABORTED: do not treat as a real error
+                setPlayOptions((prev) => ({ ...prev, loading: false }));
+                return;
+            }
+
             setPlayOptions((prev) => ({ ...prev, loading: false }));
         };
 
@@ -243,11 +333,13 @@ export function Audio(
 
     useEffect(() => {
         if (!audioRef.current) return;
+        if (ayahsTimestamps.length <= 0) {
+            toast.error("Current recitation is not complete please switch to another one!");
+            return;
+        };
 
-        // Don't play if still loading
+        // Don't start/adjust playback while loading to avoid play/pause races.
         if (playOptions.loading) {
-            audioRef.current.pause();
-            setPlayOptions((prev) => ({ ...prev, playing: false }));
             return;
         }
 
@@ -256,7 +348,7 @@ export function Audio(
             if (wordsTimestamps.length >= 1) {
                 setSelected((prev) => ({
                     ...prev,
-                    wordUUID: wordsTimestamps[0].uuid,
+                    wordUUID: wordsTimestamps[0].word_uuid,
                 }));
             }
             audioRef.current.play().catch((error) => {
@@ -267,6 +359,7 @@ export function Audio(
             audioRef.current.pause();
         }
     }, [
+        ayahsTimestamps.length,
         isPlaying,
         setSelected,
         wordsTimestamps,
@@ -338,8 +431,8 @@ export function Audio(
                     const effectiveEnd = Number.isFinite(segment.end)
                         ? segment.end
                         : Number.isFinite(audio.duration)
-                          ? audio.duration
-                          : undefined;
+                            ? audio.duration
+                            : undefined;
 
                     if (
                         effectiveEnd !== undefined &&
@@ -347,7 +440,7 @@ export function Audio(
                     ) {
                         audio.currentTime = segment.start;
                         if (playingRef.current) {
-                            audio.play().catch(() => {});
+                            audio.play().catch(() => { });
                         }
                     }
                 }
@@ -365,16 +458,16 @@ export function Audio(
                     range === "page"
                         ? pageAyahUUIDsRef.current
                         : range === "juz"
-                          ? juzAyahUUIDsRef.current
-                          : hizbAyahUUIDsRef.current;
+                            ? juzAyahUUIDsRef.current
+                            : hizbAyahUUIDsRef.current;
 
                 const segment = getAyahsSegmentSeconds(ayahUUIDs);
                 if (segment) {
                     const effectiveEnd = Number.isFinite(segment.end)
                         ? segment.end
                         : Number.isFinite(audio.duration)
-                          ? audio.duration
-                          : undefined;
+                            ? audio.duration
+                            : undefined;
 
                     if (effectiveEnd !== undefined && currentTime >= effectiveEnd) {
                         audio.currentTime = segment.start;
@@ -389,7 +482,7 @@ export function Audio(
                             }));
                         }
                         if (playingRef.current) {
-                            audio.play().catch(() => {});
+                            audio.play().catch(() => { });
                         }
                     }
                 }
@@ -457,8 +550,10 @@ export function Audio(
 
     useEffect(() => {
         if (!audioRef.current) return;
+        // Ensure playback rate is correctly re-applied whenever
+        // speed settings change or a new surah/audio source loads.
         audioRef.current.playbackRate = playBackActive ? playBackRate : 1;
-    }, [playBackRate, playBackActive]);
+    }, [playBackRate, playBackActive, recitationFileUrl]);
 
     const handleEnded = () => {
         const audio = audioRef.current;
@@ -470,7 +565,7 @@ export function Audio(
             const segment = getAyahSegmentSeconds(selectedAyahUUIDRef.current);
             if (segment) {
                 audio.currentTime = segment.start;
-                audio.play().catch(() => {});
+                audio.play().catch(() => { });
                 setPlayOptions((prev) => ({ ...prev, playing: true }));
                 return;
             }
@@ -483,7 +578,7 @@ export function Audio(
             if (surahAyahs[0]?.uuid) {
                 setSelected((prev) => ({ ...prev, ayahUUID: surahAyahs[0].uuid }));
             }
-            audio.play().catch(() => {});
+            audio.play().catch(() => { });
             setPlayOptions((prev) => ({ ...prev, playing: true }));
             return;
         }
@@ -500,8 +595,8 @@ export function Audio(
                 repeatRange === "page"
                     ? pageAyahUUIDsRef.current
                     : repeatRange === "juz"
-                      ? juzAyahUUIDsRef.current
-                      : hizbAyahUUIDsRef.current;
+                        ? juzAyahUUIDsRef.current
+                        : hizbAyahUUIDsRef.current;
             const segment = getAyahsSegmentSeconds(ayahUUIDs);
             if (segment) {
                 audio.currentTime = segment.start;
@@ -510,13 +605,30 @@ export function Audio(
                     lastAyahFromTimeUpdate.current = segment.firstUUID;
                     setSelected((prev) => ({ ...prev, ayahUUID: segment.firstUUID }));
                 }
-                audio.play().catch(() => {});
+                audio.play().catch(() => { });
                 setPlayOptions((prev) => ({ ...prev, playing: true }));
                 return;
             }
         }
 
-        // Default: stop when audio ends.
+        // Default: rotate through all surahs in order, looping back to the first.
+        if (recitationSurahs.length > 0) {
+            const nextIndex =
+                currentSurahIndex < recitationSurahs.length - 1
+                    ? currentSurahIndex + 1
+                    : 0;
+
+            setCurrentSurahIndex(nextIndex);
+
+            if (audio) {
+                audio.currentTime = 0;
+            }
+
+            setPlayOptions((prev) => ({ ...prev, playing: true }));
+            return;
+        }
+
+        // If for some reason there are no recitation surahs, just stop.
         setPlayOptions((prev) => ({ ...prev, playing: false }));
     };
 

@@ -11,7 +11,41 @@ import {
     SelectValue,
 } from "../ui/select";
 import { Button } from "../ui/button";
-import { Input } from "../ui/input";
+import {
+    Combobox,
+    ComboboxContent,
+    ComboboxEmpty,
+    ComboboxInput,
+    ComboboxItem,
+    ComboboxList,
+} from "@/components/ui/combobox";
+
+
+function PageSelectorCombobox({
+    items,
+    value,
+    onValueChange,
+}: {
+    items: readonly string[];
+    value: string | null;
+    onValueChange: (value: string | null) => void;
+}) {
+    return (
+        <Combobox items={items} value={value} onValueChange={onValueChange} autoHighlight>
+            <ComboboxInput placeholder="Select a page" />
+            <ComboboxContent>
+                <ComboboxEmpty>No pages found.</ComboboxEmpty>
+                <ComboboxList>
+                    {(item) => (
+                        <ComboboxItem key={item} value={item}>
+                            {item}
+                        </ComboboxItem>
+                    )}
+                </ComboboxList>
+            </ComboboxContent>
+        </Combobox>
+    );
+}
 
 interface FindPopupProps {
     surahs: Surah[];
@@ -189,7 +223,7 @@ export function FindPopup({
         return (page: number) => {
             if (page === 1) return breakers[0];
             // Find the first ayah on the specified page
-            return breakers.find((ayah) => ayah.page === page);
+            return breakers.find((ayah) => Number(ayah.page) === page);
         };
     }, [breakers]);
 
@@ -203,11 +237,19 @@ export function FindPopup({
     }, [hizbData]);
 
     const availablePages = useMemo(() => {
-        const pages = new Set(
-            breakers.map((ayah) => ayah.page).filter(Boolean)
-        );
-        return Array.from([...pages]).sort((a, b) => (a || 0) - (b || 0));
+        const pages = new Set<number>();
+        breakers.forEach((ayah) => {
+            const p = Number(ayah.page);
+            if (Number.isFinite(p) && p > 0) pages.add(p);
+        });
+        return Array.from(pages).sort((a, b) => a - b);
     }, [breakers]);
+
+    const availablePageItems = useMemo(() => {
+        return availablePages
+            .map((p) => (p == null ? null : String(p)))
+            .filter((p): p is string => !!p);
+    }, [availablePages]);
 
     // Handle juz selection
     const handleJuzSelect = (juz: number) => {
@@ -287,7 +329,7 @@ export function FindPopup({
                         handleSurahSelect(+value);
                     }}
                 >
-                    <SelectTrigger id="surah" className="w-45">
+                    <SelectTrigger id="surah" className="w-full">
                         <SelectValue placeholder="Select Surah" />
                     </SelectTrigger>
                     <SelectContent>
@@ -310,7 +352,7 @@ export function FindPopup({
                         handleAyahSelect(+value);
                     }}
                 >
-                    <SelectTrigger id="ayah" className="w-[180px]">
+                    <SelectTrigger id="ayah" className="w-full">
                         <SelectValue placeholder="Select Ayah" />
                     </SelectTrigger>
                     <SelectContent>
@@ -334,14 +376,14 @@ export function FindPopup({
                     </SelectContent>
                 </Select>
             </div>
-            <h3>By Juz/Hizb/Ruku</h3>
+            <h3>By Juz/Hizb</h3>
             <div className="flex flex-row gap-5">
                 <Select
                     value={currentJuz?.toString() || ""}
                     disabled={juzData.length === 0}
                     onValueChange={(value) => handleJuzSelect(+value)}
                 >
-                    <SelectTrigger id="juz" className="w-[180px]">
+                    <SelectTrigger id="juz" className="w-full">
                         <SelectValue placeholder="Select Juz" />
                     </SelectTrigger>
                     <SelectContent>
@@ -360,7 +402,7 @@ export function FindPopup({
                     disabled={hizbData.length === 0}
                     onValueChange={(val) => handleHizbSelect(+val)}
                 >
-                    <SelectTrigger id="hizb" className="w-[180px]">
+                    <SelectTrigger id="hizb" className="w-full">
                         <SelectValue placeholder="Select Hizb" />
                     </SelectTrigger>
                     <SelectContent>
@@ -376,40 +418,23 @@ export function FindPopup({
                 </Select>
             </div>
             <h3>By Page</h3>
-            <div>
-                <Select
-                    value={currentPage?.toString() || ""}
-                    onValueChange={(val) => handlePageSelect(+val)}
-                >
-                    <SelectTrigger id="page" className="w-[180px]">
-                        <SelectValue placeholder="Select Page" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectGroup>
-                            <SelectLabel>Pages</SelectLabel>
-                            {availablePages.map((page) => (
-                                <SelectItem
-                                    key={page}
-                                    value={page?.toString() || ""}
-                                >
-                                    {page}
-                                </SelectItem>
-                            ))}
-                        </SelectGroup>
-                    </SelectContent>
-                </Select>
-            </div>
-            <div>
-                <Button
-                    className="w-full"
-                    onClick={() => {
-                        onButtonClicked(currentSurah || 1, currentAyah || 1);
-                        onClose?.();
-                    }}
-                >
-                    Find
-                </Button>
-            </div>
+            <PageSelectorCombobox
+                items={availablePageItems}
+                value={currentPage?.toString() ?? null}
+                onValueChange={(val) => {
+                    if (!val) return;
+                    handlePageSelect(+val);
+                }}
+            />
+            <Button
+                className="w-full mt-1"
+                onClick={() => {
+                    onButtonClicked(currentSurah || 1, currentAyah || 1);
+                    onClose?.();
+                }}
+            >
+                Find
+            </Button>
         </>
     );
 }

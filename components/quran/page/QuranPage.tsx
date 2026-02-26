@@ -105,7 +105,7 @@ export function QuranPage({
             lastJuzRef.current = currentAyah.juz;
             setPlayOptions((prev) => ({
                 ...prev,
-                juzAyahUUIDs: juzToAyahUUIDs.get(currentAyah.juz) ?? [],
+                juzAyahUUIDs: juzToAyahUUIDs.get(currentAyah.juz || 0) ?? [],
             }));
         }
 
@@ -116,7 +116,7 @@ export function QuranPage({
             lastHizbRef.current = currentAyah.hizb;
             setPlayOptions((prev) => ({
                 ...prev,
-                hizbAyahUUIDs: hizbToAyahUUIDs.get(currentAyah.hizb) ?? [],
+                hizbAyahUUIDs: hizbToAyahUUIDs.get(currentAyah.hizb || 0) ?? [],
             }));
         }
     }, [

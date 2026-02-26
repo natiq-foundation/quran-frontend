@@ -7,10 +7,11 @@ export default function Home() {
     return (
         <div className="flex items-center justify-center p-10 gap-4">
             <Button variant="secondary" asChild>
-                <div>
+                <Link href="/mushaf/hafs">
+
                     <Material icon="auto_stories" />
-                    <Link href="/mushaf/hafs">Go to Mushaf page! (hafs)</Link>
-                </div>
+                    Go to Mushaf page! (hafs)
+                </Link>
             </Button>
             <GotoBookmark />
         </div>
