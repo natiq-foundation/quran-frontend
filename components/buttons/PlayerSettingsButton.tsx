@@ -101,7 +101,7 @@ export function PlayerSettingsButton({
                         users={recitations.map((recitation) => ({
                             id: recitation.uuid,
                             avatar: "",
-                            description: recitation.recitation_date,
+                            description: recitation.status || "",
                             name: recitation.reciter?.name || "Name",
                         }))}
                         selectedId={selected.recitationUUID}
