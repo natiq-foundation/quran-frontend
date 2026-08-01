@@ -1,0 +1,10 @@
+services:
+  frontend:
+    image: natiqquran/quran-frontend:latest
+
+    container_name: quran-frontend
+
+    restart: unless-stopped
+
+    ports:
+      - "80:80"

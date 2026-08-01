@@ -21,11 +21,14 @@ export async function getSurahs(
     return response.data
 }
 
-export async function getSurah(uuid: string): Promise<Surah> {
-    const response = await surahsRetrieve({ path: { uuid } })
+export async function getSurah(id: string): Promise<Surah> {
+    const response = await surahsRetrieve({
+        path: { id },
+    })
 
     if (!response.data) {
-        throw new Error(`Failed to get surah ${uuid}, status: ${response.status}`)
+        throw new Error(`Failed to get surah ${id}, status: ${response.status}`)
     }
+
     return response.data
 }

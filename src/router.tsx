@@ -1,7 +1,8 @@
-import { BrowserRouter, Routes, Route, useLocation, useNavigate } from "react-router-dom"
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom"
 import { useEffect } from "react"
-import Home from "@/routes/home"
-import Launcher from "@/routes/launcher"
+import Layout from "@/layouts/LauncherLayout"
+import Search from "@/routes/search/search"
+import Settings from "@/routes/setting/settings"
 import IframePage from "@/routes/IframePage"
 
 function PWARedirect() {
@@ -21,8 +22,11 @@ export default function Router() {
     <BrowserRouter>
       <PWARedirect />
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/launcher" element={<Launcher />} />
+        <Route element={<Layout />}>
+          <Route path="/" element={<Navigate to="/search" replace />} />
+          <Route path="/search" element={<Search />} />
+          <Route path="/settings" element={<Settings />} />
+        </Route>
         <Route path="/iframe" element={<IframePage />} />
       </Routes>
     </BrowserRouter>
