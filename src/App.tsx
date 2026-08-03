@@ -18,6 +18,7 @@ export default function App() {
         <LanguageSync />
 
         <div className="bg-background text-foreground">
+          <OnlineStatus />
           <Router />
 
           {/* PWA prompts */}
@@ -25,7 +26,6 @@ export default function App() {
           <InstallPrompt />
 
           {/* Network bar */}
-          <OnlineStatus />
         </div>
       </ThemeProvider>
     </SettingsProvider>
